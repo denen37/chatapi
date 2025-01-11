@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+
+        .login-form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            /* width: 100%; */
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            min-width: 100px;
+        }
+
+        .form-group input:focus {
+            border-color: #007BFF;
+            outline: none;
+        }
+
+        .form-radio-group {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 10px;
+        }
+
+        .form-radio-group label {
+            font-weight: bold;
+        }
+
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-form">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="form-radio-group">
+                <label for="role">
+                    <input type="radio" id="userRadio" name="role" value="user">
+                    User
+                </label>
+
+                <label for="role">
+                    <input type="radio" id="providerRadio" name="role" value="provider">
+                    Provider
+                </label>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="Enter your email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+            <div class="error-message" id="errorMessage"></div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent form submission
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const role = document.querySelector('input[name="role"]:checked').value;
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Clear previous error message
+            errorMessage.style.display = 'none';
+            errorMessage.textContent = '';
+
+            // Basic validation
+            if (!email || !password) {
+                errorMessage.textContent = 'Email and password are required!';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                errorMessage.textContent = 'Please enter a valid email address!';
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            // If valid, proceed (e.g., send data to server)
+            console.log('Email:', email);
+            console.log('Password:', password);
+            console.log('Role:', role);
+            fetch(`/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Accept': 'text/html'
+                },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    role,
+                }),
+            }).then(response => {
+                if (response.redirected) {
+                    // Handle redirect to dashboard
+                    window.location.href = response.url;
+                } else {
+                    return response.json();
+                }
+            })
+                .then(data => {
+                    if (data && data.error) {
+                        errorMessage.textContent = data.error;
+                        errorMessage.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    errorMessage.textContent = 'Something went wrong. Please try again later.';
+                    errorMessage.style.display = 'block';
+                });
+        });
+
+        function validateEmail(email) {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailPattern.test(email);
+        }
+    </script>
+</body>
+
+</html>

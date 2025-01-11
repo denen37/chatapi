@@ -1,0 +1,181 @@
+//- dashboard.pug
+html
+  head
+    title Dashboard
+    link(rel="stylesheet" href="/css/styles.css")
+    style
+      
+  body
+    .container
+      .header
+        h1 Dashboard
+      h2 Welcome #{user.firstName + ' ' + user.lastName},
+      .chat-container
+        ul.chat-list
+            li Chat with
+            //- - for(const partner of partners)
+            //-   li.chat-partner(id=`${partner.id}`) #{partner.firstName + ' ' + partner.lastName}
+        .chat-box(id="chatBox")
+        //- Messages will appear here
+      .chat-input
+        input(type="hidden" id="userId" value=`${user.id}`)
+        input(type="hidden" id="userRole" value=`${user.role}`)
+        input(type="hidden" id="username" value=`${user.firstName + ' ' + user.lastName}`)
+
+        input(type="file" id="file")
+        input(type="text" id="chatInput" placeholder="Type a message...")
+        button(onclick="sendMessage()") Send
+    script(src="/socket.io/socket.io.js") 
+    script.
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        let userId = document.getElementById('userId').value
+        let userRole = document.getElementById('userRole').value
+        let username = document.getElementById('username').value
+        const fileInput = document.querySelector('[type="file"]')
+        console.log('username', username);
+        let partnerId;
+
+        // Get all cookies as a single string
+        function getCookie(name) {
+            const cookies = document.cookie.split('; ');
+            for (let cookie of cookies) {
+                const [key, value] = cookie.split('=');
+                if (key === name) {
+                    return decodeURIComponent(value);
+                }
+            }
+            return null; // Return null
+        }
+
+       
+
+        // Usage
+        const token = getCookie('token');
+        
+        //const URL = "http://localhost:4000";
+        const socket = io( { 
+            autoConnect: false,
+        });
+
+        socket.auth = { token };
+
+        socket.connect();
+
+        chatInput.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' && e.target.value.trim() !== '') {
+            sendMessage();
+        }})
+
+        function upload(file) {
+          socket.emit("upload", file, (status) => {
+            console.log(status);
+          });
+        }
+
+        fileInput.addEventListener('change', function (e) {
+          console.log('uploaded', e.target.files[0]);
+          upload(e.target.files[0]);
+        });
+
+
+        fileInput.addEventListener('onchange', function(e) {
+          console.log('uploaded',)
+          upload(e.target.value);
+        })
+
+        function connectTo(e){
+         chatBox.innerHTML = '';
+          const chatPartners = document.querySelectorAll('.chat-partner');
+              chatPartners.forEach(partner => partner.classList.remove('active'));
+              const partner = e.target;
+                partnerId = partner.getAttribute('id');                                                       
+                partner.classList.add('active');
+
+                let room = {
+                    userId: Number(userRole === 'user' ? userId : partnerId),
+                    providerId: Number(userRole === 'user' ? partnerId : userId)
+                }
+
+                socket?.emit('load-msg' , room)
+
+                socket?.emit('private-msg', room)
+        }
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+
+            if (message && userId && partnerId) {
+              let msgObj = {
+                  from: Number(userId),
+                  to: Number(partnerId),
+                  role: userRole,
+                  message,
+                  timestamp: new Date()
+              }
+
+              socket.emit('send-msg', msgObj);
+              chatInput.value = '';
+            }
+
+            //- TODO - Create an exception handler for null and undefined values to and from
+        }
+
+        function addMessages(msg){
+          const messageDiv = document.createElement('div');
+            messageDiv.className = msg.role === 'user' || msg.from === 'user' ? 'message user' : 'message other'
+            messageDiv.textContent = msg.message;
+            chatBox.appendChild(messageDiv);
+        }
+
+
+        socket?.on('msg-recieve', (msg) => {
+            addMessages(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+
+        socket?.on('msg-loaded', (data) => {
+          data?.forEach(item => {
+            addMessages(item);
+          })
+           chatBox.scrollTop = chatBox.scrollHeight;
+        })
+
+        socket.on('chat-peers', (data) => {
+             const chatList = document.querySelector('.chat-list');
+             chatList.innerHTML = '';
+          const role = userRole === 'user' ? 'provider' : 'user'
+          data.forEach(peer => {
+            const li = document.createElement('li');
+            li.setAttribute('id', peer[role].id);
+            li.classList.add('chat-partner');
+            li.addEventListener('click', connectTo)
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = `${peer[role].firstName} ${peer[role].lastName}`
+            textSpan.style.pointerEvents = 'none';
+            li.appendChild(textSpan);
+
+            if(peer[role].online){
+              const connectionSpan = document.createElement('span');
+              connectionSpan.classList.add('online');
+              li.appendChild(connectionSpan);
+            }
+
+            chatList.appendChild(li);
+          })
+        }) 
+
+        socket.on('user-disconnected', (data) => {
+          socket.emit('fetch-peers', '')
+        })
+
+        socket.on('user-connected', (data) => {
+          socket.emit('fetch-peers', '')
+        })
+
+        socket.on("connect_error", (err) => {
+          if (err) {
+            console.log(err.message);
+          }
+        });
