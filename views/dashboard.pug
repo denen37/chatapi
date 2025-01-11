@@ -11,10 +11,10 @@ html
         h1 Dashboard
       h2 Welcome #{user.firstName + ' ' + user.lastName},
       .chat-container
-        ul.chat-list
-            li Chat with
-            //- - for(const partner of partners)
-            //-   li.chat-partner(id=`${partner.id}`) #{partner.firstName + ' ' + partner.lastName}
+        .chat-list-container
+          p(style="text-align: center") Chat with
+          ul.chat-list
+
         .chat-box(id="chatBox")
         //- Messages will appear here
       .chat-input
