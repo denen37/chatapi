@@ -11,11 +11,6 @@ module.exports = (httpServer, URL) => {
             origin: '*',
             credentials: true,
         },
-
-        // connectionStateRecovery: {
-        //     maxDisconnectionDuration: 2 * 60 * 1000,
-        //     skipMiddlewares: true,
-        // }
     });
 
 
@@ -50,7 +45,6 @@ module.exports = (httpServer, URL) => {
         let previousChats;
 
         let data = { ...socket.user, online: true };
-        console.log('data', data);
         try {
             response = await axios.put(`${BASE_URL}/chats/online_status`, data);
             console.log('response', response.data);
@@ -78,10 +72,8 @@ module.exports = (httpServer, URL) => {
 
         socket.on('send-msg', async (data) => {
             console.log('Message sent');
-            console.log('data', data);
             const roomKey = `${data.role === 'user' ? data.from : data.to}${data.role === 'user' ? data.to : data.from}`
 
-            console.log('room key', roomKey);
             const chatrooms = io.of("/").adapter.rooms;
             let keys = [...chatrooms.keys()];
             let room = keys.find(key => key.split("-")[0] === roomKey);
@@ -169,8 +161,6 @@ module.exports = (httpServer, URL) => {
             let data = { ...socket.user, online: false };
 
             const response = await axios.put(`${BASE_URL}/chats/online_status`, data);
-
-            console.log('response', response.data);
 
             console.log('A user disconnected');
         })
