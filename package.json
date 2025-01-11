@@ -4,8 +4,7 @@
   "description": "Basic chat app with Node.js and socket.io",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon server",
-    "dev": "node server"
+    "start": "node app.js"
   },
   "dependencies": {
     "axios": "^1.7.9",
