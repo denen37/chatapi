@@ -57,7 +57,7 @@ module.exports = (httpServer, URL) => {
             logger.error(error.message);
         }
 
-        previousChats.forEach(chat => {
+        previousChats?.forEach(chat => {
             let chatroom = `${chat.userId}${chat.providerId}-chat_${chat.id}`
             socket.join(chatroom);
         })
