@@ -111,31 +111,15 @@ module.exports = (httpServer, URL) => {
 
             try {
                 conversation = await axios.get(`${BASE_URL}/chats/messages?userId=${data.userId}&providerId=${data.providerId}`)
-                conversation = conversation.data;
+                conversation = conversation.data[0];
             } catch (error) {
                 console.log('error', error.message);
                 logger.error(error.messages);
             }
 
-            if (!conversation) {
-                try {
-                    //create a conversation
-                    let response = await axios.post(`${BASE_URL}/chats/conversations`, {
-                        userId: data.userId,
-                        providerId: data.providerId
-                    })
+            let chatroom = `${conversation.userId}${conversation.providerId}-chat_${conversation.id}`
 
-                    let conversation = response.data;
-
-                    let chatroom = `${conversation.userId}${conversation.providerId}-chat_${conversation.id}`
-
-                    socket.join(chatroom);
-
-                    return;
-                } catch (error) {
-                    console.log(error);
-                }
-            }
+            socket.join(chatroom);
 
             socket.emit('msg-loaded', conversation.messages);
         })

@@ -70,9 +70,12 @@ body {
 }
 
 .chat-box .message {
-  margin-bottom: 10px;
   padding: 10px;
+  margin-bottom: 10px;
   border-radius: 10px;
+  align-items: center;
+  display: flex;
+  gap: 4px;
 }
 
 .chat-box .message.user {
@@ -84,6 +87,18 @@ body {
 .chat-box .message.other {
   background-color: #eaeaea;
   color: black;
+}
+
+.chat-box .message-text {
+  margin: 0;
+  flex: 1
+}
+
+.chat-box .message-time {
+  margin: 0;
+  font-size: 12px;
+  color: #c7c7c7;
+  font-style: italic;
 }
 
 .chat-input {

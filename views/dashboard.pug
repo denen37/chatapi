@@ -127,11 +127,39 @@ html
             //- TODO - Create an exception handler for null and undefined values to and from
         }
 
+        const findTime = (time) => {
+            const diff = new Date() - new Date(time)
+            const timeMap = [
+                { unit: 'd', value: 24 * 60 * 60 * 1000 },
+                { unit: 'h', value: 60 * 60 * 1000 },
+                { unit: 'm', value: 60 * 1000 },
+                { unit: 's', value: 1000 },
+                { unit: 'ms', value: 1 }
+            ]
+
+            let timeObj = timeMap.find(item => {
+                return diff / item.value >= 1
+            })
+
+            return Math.floor(diff / timeObj.value) + timeObj.unit
+
+        }
+
         function addMessages(msg){
+          const textBox = document.createElement('p');
+          textBox.textContent = msg.message;
+          textBox.className = 'message-text'
+
+          const timeBox = document.createElement('p');
+          timeBox.textContent = findTime(msg.timestamp) + ' ago';
+          timeBox.className = 'message-time'
+
           const messageDiv = document.createElement('div');
-            messageDiv.className = msg.role === 'user' || msg.from === 'user' ? 'message user' : 'message other'
-            messageDiv.textContent = msg.message;
-            chatBox.appendChild(messageDiv);
+          messageDiv.className = msg.role === 'user' || msg.from === 'user' ? 'message user' : 'message other'
+          messageDiv.appendChild(textBox);
+          messageDiv.appendChild(timeBox);
+
+          chatBox.appendChild(messageDiv);
         }
 
 
