@@ -49,28 +49,35 @@ module.exports = (httpServer, URL) => {
             response = await axios.put(`${BASE_URL}/chats/online_status`, data);
             console.log('response', response.data);
 
-            previousChats = await axios.get(`${BASE_URL}/chats/${socket.user.role}/partners/${socket.user.id}`);
-            previousChats = previousChats.data;
-            logger.info(previousChats);
-            console.log('previousChats', previousChats);
+            // previousChats = await axios.get(`${BASE_URL}/chats/${socket.user.role}/partners/${socket.user.id}`);
+            // previousChats = previousChats.data;
+            // logger.info(previousChats);
+            // console.log('previousChats', previousChats);
         } catch (error) {
             console.log('error', error.message);
             logger.error(error.message);
         }
 
-        previousChats.forEach(chat => {
-            let chatroom = `${chat.userId}${chat.providerId}-chat_${chat.id}`
-            socket.join(chatroom);
+        // previousChats.forEach(chat => {
+        //     let chatroom = `${chat.userId}${chat.providerId}-chat_${chat.id}`
+        //     socket.join(chatroom);
+        // })
+
+        // socket.emit("chat-peers", previousChats);
+
+        // console.log(socket.rooms);
+        // for (const room of socket.rooms) {
+        //     if (room !== socket.id) { // Skip the socket's own ID room
+        //         socket.to(room).emit("user-connected", socket.user);
+        //     }
+        // }
+
+        socket.on("get-contacts", async (data) => {
+            allChats = await axios.get(`${BASE_URL}/chats/${socket.user.role}/partners`);
+            allChats = allChats.data;
+            socket.emit("get-contacts-success", allChats);
         })
 
-        socket.emit("chat-peers", previousChats);
-
-        console.log(socket.rooms);
-        for (const room of socket.rooms) {
-            if (room !== socket.id) { // Skip the socket's own ID room
-                socket.to(room).emit("user-connected", socket.user);
-            }
-        }
 
         socket.on('send-msg', async (data) => {
             console.log('Message sent');

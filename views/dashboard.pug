@@ -14,6 +14,8 @@ html
         .chat-list-container
           p(style="text-align: center") Chat with
           ul.chat-list
+            li.empty There are no chats yet
+          button.add-chat-button All Contacts
 
         .chat-box(id="chatBox")
         //- Messages will appear here
@@ -33,6 +35,7 @@ html
         let userRole = document.getElementById('userRole').value
         let username = document.getElementById('username').value
         const fileInput = document.querySelector('[type="file"]')
+        const addChat= document.querySelector('.add-chat-button');
         console.log('username', username);
         let partnerId;
 
@@ -76,6 +79,10 @@ html
         fileInput.addEventListener('change', function (e) {
           console.log('uploaded', e.target.files[0]);
           upload(e.target.files[0]);
+        });
+
+        addChat.addEventListener('click', function (e) {
+         socket.emit('get-contacts', {})
         });
 
 
@@ -141,29 +148,64 @@ html
            chatBox.scrollTop = chatBox.scrollHeight;
         })
 
-        socket.on('chat-peers', (data) => {
-             const chatList = document.querySelector('.chat-list');
-             chatList.innerHTML = '';
-          const role = userRole === 'user' ? 'provider' : 'user'
-          data.forEach(peer => {
-            const li = document.createElement('li');
-            li.setAttribute('id', peer[role].id);
+        const showChatPeer = (peer) => {
+          const chatList = document.querySelector('.chat-list');
+          const li = document.createElement('li');
+            li.setAttribute('id', peer.id);
             li.classList.add('chat-partner');
             li.addEventListener('click', connectTo)
 
             const textSpan = document.createElement('span');
-            textSpan.textContent = `${peer[role].firstName} ${peer[role].lastName}`
+            textSpan.textContent = `${peer.firstName} ${peer.lastName}`
             textSpan.style.pointerEvents = 'none';
             li.appendChild(textSpan);
 
-            if(peer[role].online){
+            if(peer.online){
               const connectionSpan = document.createElement('span');
               connectionSpan.classList.add('online');
               li.appendChild(connectionSpan);
             }
 
             chatList.appendChild(li);
+        }
+
+        const showPlaceholder = (text) => {
+          const li = document.createElement('li');
+          li.classList.add('empty');
+          li.textContent = text;
+          const chatList = document.querySelector('.chat-list');
+          chatList.appendChild(li);
+        }
+
+        socket.on('chat-peers', (data) => {
+             const chatList = document.querySelector('.chat-list');
+             chatList.innerHTML = '';
+
+             if(data.length === 0){
+               showPlaceholder('No chat partners yet')
+               return ;
+             }
+
+          const role = userRole === 'user' ? 'provider' : 'user'
+          data.forEach(peer => {
+            showChatPeer(peer[role])
           })
+        }) 
+
+      
+        socket.on('get-contacts-success', (data) => {
+             const chatList = document.querySelector('.chat-list');
+             chatList.innerHTML = '';
+
+             if(data.length === 0){
+               showPlaceholder('No chat contacts yet')
+               return ;
+             }
+
+             chatList.innerHTML = '';
+              data.forEach(peer => {
+                showChatPeer(peer)
+              })
         }) 
 
         socket.on('user-disconnected', (data) => {
