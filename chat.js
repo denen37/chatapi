@@ -117,7 +117,7 @@ module.exports = (httpServer, URL) => {
                 logger.error(error.messages);
             }
 
-            if (!msgs.messages || !msgs?.messages?.length) {
+            if (!msgs?.messages || !msgs?.messages?.length) {
                 try {
                     //create a conversation
                     let response = await axios.post(`${BASE_URL}/chats/conversations`, {
