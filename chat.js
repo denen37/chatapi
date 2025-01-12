@@ -51,7 +51,8 @@ module.exports = (httpServer, URL) => {
 
             previousChats = await axios.get(`${BASE_URL}/chats/${socket.user.role}/partners/${socket.user.id}`);
             previousChats = previousChats.data;
-            looger.info(previousChats);
+            logger.info(previousChats);
+            console.log('previousChats', previousChats);
         } catch (error) {
             console.log('error', error.message);
             logger.error(error.message);
