@@ -107,17 +107,17 @@ module.exports = (httpServer, URL) => {
         });
 
         socket.on('private-msg', async (data) => {
-            let msgs;
+            let conversation;
 
             try {
-                msgs = await axios.get(`${BASE_URL}/chats/messages?userId=${data.userId}&providerId=${data.providerId}`)
-                msgs = msgs.data;
+                conversation = await axios.get(`${BASE_URL}/chats/messages?userId=${data.userId}&providerId=${data.providerId}`)
+                conversation = conversation.data;
             } catch (error) {
                 console.log('error', error.message);
                 logger.error(error.messages);
             }
 
-            if (!msgs?.messages || !msgs?.messages?.length) {
+            if (!conversation) {
                 try {
                     //create a conversation
                     let response = await axios.post(`${BASE_URL}/chats/conversations`, {
@@ -137,7 +137,7 @@ module.exports = (httpServer, URL) => {
                 }
             }
 
-            socket.emit('msg-loaded', msgs?.messages);
+            socket.emit('msg-loaded', conversation.messages);
         })
 
         //     socket.on("upload", (file, callback) => {
