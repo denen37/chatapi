@@ -49,28 +49,27 @@ module.exports = (httpServer, URL) => {
             response = await axios.put(`${BASE_URL}/chats/online_status`, data);
             console.log('response', response.data);
 
-            // previousChats = await axios.get(`${BASE_URL}/chats/${socket.user.role}/partners/${socket.user.id}`);
-            // previousChats = previousChats.data;
-            // logger.info(previousChats);
-            // console.log('previousChats', previousChats);
+            previousChats = await axios.get(`${BASE_URL}/chats/${socket.user.role}/partners/${socket.user.id}`);
+            previousChats = previousChats.data;
+            logger.info(previousChats);
         } catch (error) {
             console.log('error', error.message);
             logger.error(error.message);
         }
 
-        // previousChats.forEach(chat => {
-        //     let chatroom = `${chat.userId}${chat.providerId}-chat_${chat.id}`
-        //     socket.join(chatroom);
-        // })
+        previousChats.forEach(chat => {
+            let chatroom = `${chat.userId}${chat.providerId}-chat_${chat.id}`
+            socket.join(chatroom);
+        })
 
-        // socket.emit("chat-peers", previousChats);
+        socket.emit("chat-peers", previousChats);
 
-        // console.log(socket.rooms);
-        // for (const room of socket.rooms) {
-        //     if (room !== socket.id) { // Skip the socket's own ID room
-        //         socket.to(room).emit("user-connected", socket.user);
-        //     }
-        // }
+        console.log(socket.rooms);
+        for (const room of socket.rooms) {
+            if (room !== socket.id) { // Skip the socket's own ID room
+                socket.to(room).emit("user-connected", socket.user);
+            }
+        }
 
         socket.on("get-contacts", async (data) => {
             allChats = await axios.get(`${BASE_URL}/chats/${socket.user.role}/partners`);
@@ -108,20 +107,19 @@ module.exports = (httpServer, URL) => {
         });
 
         socket.on('private-msg', async (data) => {
-            let messages;
+            let msgs;
 
             try {
-                const response = await axios.get(`${BASE_URL}/chats/messages?userId=${data.userId}&providerId=${data.providerId}`)
-                messages = response.data;
+                msgs = await axios.get(`${BASE_URL}/chats/messages?userId=${data.userId}&providerId=${data.providerId}`)
+                msgs = msgs.data;
             } catch (error) {
-                console.log('error', error);
+                console.log('error', error.message);
                 logger.error(error.messages);
             }
 
-
-
-            if (messages.messages.length === 0) {
+            if (!msgs.messages || !msgs?.messages?.length) {
                 try {
+                    //create a conversation
                     let response = await axios.post(`${BASE_URL}/chats/conversations`, {
                         userId: data.userId,
                         providerId: data.providerId
@@ -139,7 +137,7 @@ module.exports = (httpServer, URL) => {
                 }
             }
 
-            socket.emit('msg-loaded', messages?.messages);
+            socket.emit('msg-loaded', msgs?.messages);
         })
 
         //     socket.on("upload", (file, callback) => {
